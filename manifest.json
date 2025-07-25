@@ -1,0 +1,17 @@
+{
+  "short_name": "English Pal",
+  "name": "English Pal",
+  "description": "Your AI-powered partner for learning English.",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "scope": "/",
+  "theme_color": "#4f46e5",
+  "background_color": "#f0f9ff"
+}
