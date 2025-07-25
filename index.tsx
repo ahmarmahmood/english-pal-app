@@ -15,10 +15,17 @@ root.render(
   </React.StrictMode>
 );
 
-// Register Service Worker for PWA
+// Register Service Worker for PWA (only if file exists)
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
+    // Check if sw.js exists before registering
+    fetch('/sw.js', { method: 'HEAD' })
+      .then(response => {
+        if (response.ok) {
+          return navigator.serviceWorker.register('/sw.js');
+        }
+        throw new Error('Service Worker file not found');
+      })
       .then(registration => {
         console.log('ServiceWorker registration successful with scope: ', registration.scope);
       })
