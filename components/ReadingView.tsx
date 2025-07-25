@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { generateReadingStories } from '../services/geminiService';
+import { generateReadingStories } from '../services/openaiService';
 import { Story } from '../types';
 import Loader from './common/Loader';
 import Card from './common/Card';

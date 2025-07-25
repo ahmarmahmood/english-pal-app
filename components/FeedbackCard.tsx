@@ -1,7 +1,7 @@
 import React from 'react';
 import { Feedback } from '../types';
 import Card from './common/Card';
-import { Star, CheckCircle, Target, BookOpen, BrainCircuit } from 'lucide-react';
+import { CheckCircle, BookOpen, BrainCircuit } from 'lucide-react';
 
 interface FeedbackCardProps {
     feedback: Feedback;

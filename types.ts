@@ -1,6 +1,6 @@
 export enum MessageRole {
     User = 'user',
-    Model = 'model',
+    Assistant = 'assistant',
 }
 
 export interface ChatMessage {

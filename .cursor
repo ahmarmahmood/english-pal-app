@@ -1,0 +1,185 @@
+# English Pal App - Project Documentation
+
+## Project Overview
+English Pal App is an interactive English learning application built with React 19 and TypeScript, powered by OpenAI's GPT-4o-mini model. The app provides comprehensive English learning features including reading practice, translation, conversation practice, and AI-powered feedback.
+
+## Tech Stack
+- **Frontend**: React 19 + TypeScript
+- **Build Tool**: Vite
+- **AI Integration**: OpenAI API (GPT-4o-mini)
+- **Styling**: Tailwind CSS (implied from class usage)
+- **Icons**: Lucide React
+- **Speech**: Web Speech API (TTS and Speech Recognition)
+
+## Project Structure
+
+### Core Files
+- `App.tsx` - Main application component with tab navigation
+- `index.tsx` - Application entry point
+- `types.ts` - TypeScript type definitions and enums
+- `vite.config.ts` - Vite configuration
+- `package.json` - Dependencies and scripts
+
+### Services
+- `services/openaiService.ts` - OpenAI API integration for all AI features
+
+### Components
+- `components/ChatView.tsx` - Main chat interface with exercise categories
+- `components/ConversationPractice.tsx` - Interactive conversation practice
+- `components/ReadingView.tsx` - Reading stories with TTS
+- `components/TranslationView.tsx` - Urdu to English translation
+- `components/ExerciseListView.tsx` - List of available exercises
+- `components/ExerciseCard.tsx` - Individual exercise display
+- `components/FeedbackCard.tsx` - Conversation feedback display
+- `components/StoryGenerator.tsx` - Story generation interface
+- `components/VocabularyBuilder.tsx` - Vocabulary building exercises
+- `components/ReadingStoryReader.tsx` - Story reading interface
+
+### Common Components
+- `components/common/Card.tsx` - Reusable card component
+- `components/common/Loader.tsx` - Loading spinner component
+
+## Key Features
+
+### 1. Reading Practice
+- AI-generated short stories (50-70 words)
+- Text-to-speech functionality
+- Multiple story generation
+
+### 2. Translation
+- Urdu to English translation
+- Voice input support
+- Text-to-speech for translations
+
+### 3. Conversation Practice
+- Three categories: Grammar, Vocabulary, Conversation
+- AI-powered conversation partner
+- Real-time speech recognition
+- Conversation feedback and scoring
+
+### 4. Exercise System
+- Dynamic exercise generation
+- Category-based filtering
+- Interactive learning sessions
+
+## API Integration
+
+### OpenAI Service (`services/openaiService.ts`)
+The service handles all AI interactions using OpenAI's GPT-4o-mini model:
+
+#### Functions:
+- `generateReadingStories()` - Creates short stories for reading practice
+- `translateUrduToEnglish(text)` - Translates Urdu text to English
+- `generateExerciseList(category)` - Generates exercise lists by category
+- `getExerciseDetails(title, description, category)` - Gets detailed exercise information
+- `createChat(exercise)` - Creates interactive chat sessions
+- `getConversationFeedback(messages)` - Analyzes conversation and provides feedback
+
+#### Schema Definitions:
+- `exerciseListSchema` - Structure for exercise lists
+- `exerciseDetailsSchema` - Structure for detailed exercises
+- `readingStoriesSchema` - Structure for generated stories
+- `feedbackSchema` - Structure for conversation feedback
+
+## Type Definitions (`types.ts`)
+
+### Enums:
+- `MessageRole` - User/Assistant message roles
+- `AppTab` - Main navigation tabs
+- `ExerciseCategory` - Exercise categories (Grammar, Vocabulary, Conversation)
+
+### Interfaces:
+- `ChatMessage` - Message structure for conversations
+- `ExerciseListItem` - Basic exercise information
+- `Exercise` - Detailed exercise with examples
+- `Story` - Reading story structure
+- `Feedback` - Conversation feedback structure
+
+## Environment Configuration
+
+### Required Environment Variables:
+- `VITE_OPENAI_API_KEY` - OpenAI API key for AI features
+
+### Environment Types (`vite-env.d.ts`):
+Defines TypeScript types for Vite environment variables.
+
+## Component Architecture
+
+### Main App Flow:
+1. `App.tsx` provides tab navigation between Reading, Translate, and Chat
+2. Each tab loads its respective view component
+3. Components use the OpenAI service for AI interactions
+4. Common components (Card, Loader) provide consistent UI
+
+### State Management:
+- Local component state using React hooks
+- No global state management (Redux/Zustand not used)
+- Component-specific state for loading, messages, user input
+
+### Speech Integration:
+- Web Speech API for text-to-speech
+- Speech recognition for voice input
+- Browser compatibility checks
+
+## Development Guidelines
+
+### Code Style:
+- TypeScript for type safety
+- Functional components with hooks
+- Consistent naming conventions
+- Error handling for API calls
+
+### Component Patterns:
+- Props interfaces for component typing
+- Error boundaries for API failures
+- Loading states for async operations
+- Responsive design with Tailwind classes
+
+### API Patterns:
+- Function calling for structured responses
+- Error handling with try-catch blocks
+- Consistent response parsing
+- Environment variable validation
+
+## File Naming Conventions:
+- Components: PascalCase (e.g., `ChatView.tsx`)
+- Services: camelCase (e.g., `openaiService.ts`)
+- Types: camelCase (e.g., `types.ts`)
+- Common components: PascalCase in `common/` folder
+
+## Dependencies:
+- `react` ^19.1.0 - Core React library
+- `react-dom` ^19.1.0 - React DOM rendering
+- `openai` ^4.68.0 - OpenAI API client
+- `lucide-react` ^0.525.0 - Icon library
+- `typescript` ~5.7.2 - TypeScript compiler
+- `vite` ^6.2.0 - Build tool and dev server
+
+## Development Commands:
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run preview` - Preview production build
+
+## Browser Compatibility:
+- Modern browsers with Web Speech API support
+- Speech recognition may not work in all browsers
+- Fallback to text input when speech unavailable
+
+## Performance Considerations:
+- OpenAI API rate limits
+- Speech synthesis cancellation for new audio
+- Efficient re-rendering with React hooks
+- Lazy loading not implemented (small app size)
+
+## Security:
+- API keys stored in environment variables
+- Client-side only (no backend)
+- No sensitive data storage
+
+## Future Enhancements:
+- User progress tracking
+- Offline mode
+- Multiple language support
+- Advanced speech recognition
+- Progress analytics
+- Custom exercise creation 

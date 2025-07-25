@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Send, Mic, ArrowLeft } from 'lucide-react';
-import { createChat, getConversationFeedback } from '../services/geminiService';
+import { createChat, getConversationFeedback } from '../services/openaiService';
 import { ChatMessage, MessageRole, Exercise, Feedback, ExerciseCategory } from '../types';
-import type { Chat } from '@google/genai';
 import Loader from './common/Loader';
 import ExerciseCard from './ExerciseCard';
 import FeedbackCard from './FeedbackCard';
@@ -16,7 +15,7 @@ interface ConversationPracticeProps {
 }
 
 const ConversationPractice: React.FC<ConversationPracticeProps> = ({ exercise, onGoBack, isTtsEnabled }) => {
-  const [chat, setChat] = useState<Chat | null>(null);
+  const [chat, setChat] = useState<any>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [userInput, setUserInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -27,6 +26,7 @@ const ConversationPractice: React.FC<ConversationPracticeProps> = ({ exercise, o
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const speak = useCallback((text: string) => {
     if (!text || !isTtsEnabled || !speechApi?.synthesis) return;
@@ -56,7 +56,16 @@ const ConversationPractice: React.FC<ConversationPracticeProps> = ({ exercise, o
           interimTranscript += event.results[i][0].transcript;
         }
       }
-      setUserInput(finalTranscript + interimTranscript);
+      const newText = finalTranscript + interimTranscript;
+      setUserInput(newText);
+      
+      // Auto-resize the textarea when speech input is received
+      setTimeout(() => {
+        if (textareaRef.current) {
+          textareaRef.current.style.height = 'auto';
+          textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 120) + 'px';
+        }
+      }, 10);
     };
 
     recognition.onend = () => {
@@ -82,13 +91,13 @@ const ConversationPractice: React.FC<ConversationPracticeProps> = ({ exercise, o
     const startConversation = async () => {
       setIsLoading(true);
       try {
-        const response = await chatInstance.sendMessage({ message: "Let's begin." });
-        const botMessage: ChatMessage = { id: `bot-${Date.now()}`, role: MessageRole.Model, text: response.text };
+        const response = await chatInstance.sendMessage("Let's begin.");
+        const botMessage: ChatMessage = { id: `bot-${Date.now()}`, role: MessageRole.Assistant, text: response };
         setMessages([botMessage]);
-        speak(response.text);
+        speak(response);
       } catch (e) {
         console.error("Failed to start conversation:", e);
-        const errorMessage: ChatMessage = { id: 'error-start', role: MessageRole.Model, text: "Sorry, I couldn't start the exercise. Please go back and try again." };
+        const errorMessage: ChatMessage = { id: 'error-start', role: MessageRole.Assistant, text: "Sorry, I couldn't start the exercise. Please go back and try again." };
         setMessages([errorMessage]);
       } finally {
         setIsLoading(false);
@@ -102,6 +111,14 @@ const ConversationPractice: React.FC<ConversationPracticeProps> = ({ exercise, o
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // Auto-resize textarea when userInput changes
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 120) + 'px';
+    }
+  }, [userInput]);
   
   const handleEndConversation = async () => {
       if (!messages.some(m => m.role === MessageRole.User)) {
@@ -117,7 +134,7 @@ const ConversationPractice: React.FC<ConversationPracticeProps> = ({ exercise, o
       } catch (error) {
           console.error("Error getting feedback:", error);
           // Show error in chat
-          const errorMessage: ChatMessage = { id: 'error-feedback', role: MessageRole.Model, text: "Sorry, I couldn't generate your feedback right now." };
+          const errorMessage: ChatMessage = { id: 'error-feedback', role: MessageRole.Assistant, text: "Sorry, I couldn't generate your feedback right now." };
           setMessages(prev => [...prev, errorMessage]);
       } finally {
           setIsGeneratingFeedback(false);
@@ -144,13 +161,13 @@ const ConversationPractice: React.FC<ConversationPracticeProps> = ({ exercise, o
     setIsLoading(true);
 
     try {
-      const response = await chat.sendMessage({ message: text });
-      const botMessage: ChatMessage = { id: `bot-${Date.now()}`, role: MessageRole.Model, text: response.text };
+      const response = await chat.sendMessage(text);
+      const botMessage: ChatMessage = { id: `bot-${Date.now()}`, role: MessageRole.Assistant, text: response };
       setMessages(prev => [...prev, botMessage]);
-      speak(response.text);
+      speak(response);
     } catch (error) {
       console.error("Error sending message:", error);
-      const errorMessage: ChatMessage = { id: 'error-send', role: MessageRole.Model, text: "Sorry, something went wrong. Please try again." };
+      const errorMessage: ChatMessage = { id: 'error-send', role: MessageRole.Assistant, text: "Sorry, something went wrong. Please try again." };
       setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
@@ -208,20 +225,34 @@ const ConversationPractice: React.FC<ConversationPracticeProps> = ({ exercise, o
         <div ref={messagesEndRef} />
       </div>
 
-      <form ref={formRef} onSubmit={handleSendMessage} className="mt-auto flex items-center gap-2">
+      <form ref={formRef} onSubmit={handleSendMessage} className="mt-auto flex items-end gap-2">
         <div className="flex-grow relative">
-          <input
-            type="text"
+          <textarea
+            ref={textareaRef}
             value={userInput}
-            onChange={(e) => setUserInput(e.target.value)}
+            onChange={(e) => {
+              setUserInput(e.target.value);
+              // Auto-resize the textarea
+              e.target.style.height = 'auto';
+              e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                if (userInput.trim() && !isLoading) {
+                  handleSendMessage(e as any);
+                }
+              }
+            }}
             placeholder="Type or speak..."
-            className="w-full p-3 pr-12 border rounded-full focus:outline-none focus:ring-2 focus:ring-primary"
+            className="w-full p-3 pr-12 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary resize-none overflow-hidden min-h-[48px] max-h-[120px]"
             disabled={isLoading}
+            rows={1}
           />
           <button
             type="button"
             onClick={toggleListening}
-            className={`absolute right-1 top-1/2 -translate-y-1/2 p-2 rounded-full text-white transition-colors ${isListening ? 'bg-red-500 animate-pulse' : 'bg-primary hover:bg-primary-hover'}`}
+            className={`absolute right-1 bottom-1 p-2 rounded-full text-white transition-colors ${isListening ? 'bg-red-500 animate-pulse' : 'bg-primary hover:bg-primary-hover'}`}
             disabled={!speechApi}
             aria-label={isListening ? 'Stop listening' : 'Start listening'}
           >

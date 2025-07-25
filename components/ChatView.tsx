@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { BrainCircuit, BookText, MessageSquare } from 'lucide-react';
 import { ExerciseCategory, ExerciseListItem, Exercise } from '../types';
-import { generateExerciseList, getExerciseDetails } from '../services/geminiService';
+import { generateExerciseList, getExerciseDetails } from '../services/openaiService';
 import ConversationPractice from './ConversationPractice';
 import ExerciseListView from './ExerciseListView';
 import Loader from './common/Loader';

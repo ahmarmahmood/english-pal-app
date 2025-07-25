@@ -1,7 +1,7 @@
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Mic, Volume2 } from 'lucide-react';
-import { translateUrduToEnglish } from '../services/geminiService';
+import { translateUrduToEnglish } from '../services/openaiService';
 import Card from './common/Card';
 import Loader from './common/Loader';
 
