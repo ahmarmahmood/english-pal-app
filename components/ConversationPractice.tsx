@@ -194,30 +194,63 @@ const ConversationPractice: React.FC<ConversationPracticeProps> = ({ exercise, o
   }
 
   return (
-    <div className="flex flex-col h-full animate-fade-in">
-      <header className="flex items-center mb-4 pb-2 border-b">
-        <button onClick={onGoBack} className="p-2 text-gray-600 hover:text-dark-text" aria-label="Go back">
+    <div className="chat-container fade-in">
+      <header style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem', paddingBottom: '0.5rem', borderBottom: '1px solid #e5e7eb' }}>
+        <button 
+          onClick={onGoBack} 
+          style={{ 
+            padding: '0.5rem', 
+            color: '#6b7280', 
+            background: 'none', 
+            border: 'none', 
+            cursor: 'pointer' 
+          }} 
+          aria-label="Go back"
+        >
           <ArrowLeft size={24} />
         </button>
-        <div className="flex-1 text-center">
-            <h2 className="text-lg font-bold text-dark-text truncate px-2">{exercise.title}</h2>
+        <div style={{ flex: 1, textAlign: 'center' }}>
+            <h2 style={{ fontSize: '1.125rem', fontWeight: 'bold', color: '#1f2937', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', padding: '0 0.5rem' }}>{exercise.title}</h2>
         </div>
-        <div className="w-10"></div> {/* Spacer */}
+        <div style={{ width: '2.5rem' }}></div>
       </header>
       
       <ExerciseCard exercise={exercise} />
 
-      <div className="flex-grow overflow-y-auto mb-4 space-y-4 pr-2">
+      <div className="chat-messages">
         {messages.map((msg) => (
-          <div key={msg.id} className={`flex items-end gap-2 ${msg.role === MessageRole.User ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[80%] p-3 rounded-2xl shadow-sm ${msg.role === MessageRole.User ? 'bg-primary text-white rounded-br-none' : 'bg-gray-200 text-dark-text rounded-bl-none'}`}>
-              <p className="text-sm leading-relaxed">{msg.text}</p>
+          <div key={msg.id} style={{ 
+            display: 'flex', 
+            alignItems: 'flex-end', 
+            gap: '0.5rem',
+            justifyContent: msg.role === MessageRole.User ? 'flex-end' : 'flex-start',
+            marginBottom: '1rem'
+          }}>
+            <div style={{ 
+              maxWidth: '80%', 
+              padding: '0.75rem', 
+              borderRadius: '1rem', 
+              boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+              backgroundColor: msg.role === MessageRole.User ? '#4f46e5' : '#f3f4f6',
+              color: msg.role === MessageRole.User ? 'white' : '#1f2937',
+              borderBottomRightRadius: msg.role === MessageRole.User ? '0.25rem' : '1rem',
+              borderBottomLeftRadius: msg.role === MessageRole.User ? '1rem' : '0.25rem'
+            }}>
+              <p style={{ fontSize: '0.875rem', lineHeight: '1.6' }}>{msg.text}</p>
             </div>
           </div>
         ))}
         {isLoading && (messages[messages.length-1]?.role === MessageRole.User) && (
-            <div className="flex items-end gap-2 justify-start">
-                 <div className="max-w-[80%] p-3 rounded-2xl shadow-sm bg-gray-200 text-dark-text rounded-bl-none">
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: '0.5rem', justifyContent: 'flex-start' }}>
+                 <div style={{ 
+                   maxWidth: '80%', 
+                   padding: '0.75rem', 
+                   borderRadius: '1rem', 
+                   boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                   backgroundColor: '#f3f4f6',
+                   color: '#1f2937',
+                   borderBottomLeftRadius: '0.25rem'
+                 }}>
                     <Loader text="" />
                  </div>
             </div>
@@ -225,49 +258,85 @@ const ConversationPractice: React.FC<ConversationPracticeProps> = ({ exercise, o
         <div ref={messagesEndRef} />
       </div>
 
-      <form ref={formRef} onSubmit={handleSendMessage} className="mt-auto flex items-end gap-2">
-        <div className="flex-grow relative">
-          <textarea
-            ref={textareaRef}
-            value={userInput}
-            onChange={(e) => {
-              setUserInput(e.target.value);
-              // Auto-resize the textarea
-              e.target.style.height = 'auto';
-              e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                if (userInput.trim() && !isLoading) {
-                  handleSendMessage(e as any);
+      <div className="chat-input-area">
+        <form ref={formRef} onSubmit={handleSendMessage} style={{ display: 'flex', alignItems: 'flex-end', gap: '0.5rem' }}>
+          <div style={{ flexGrow: 1, position: 'relative' }}>
+            <textarea
+              ref={textareaRef}
+              value={userInput}
+              onChange={(e) => {
+                setUserInput(e.target.value);
+                // Auto-resize the textarea
+                e.target.style.height = 'auto';
+                e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  if (userInput.trim() && !isLoading) {
+                    handleSendMessage(e as any);
+                  }
                 }
-              }
-            }}
-            placeholder="Type or speak..."
-            className="w-full p-3 pr-12 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary resize-none overflow-hidden min-h-[48px] max-h-[120px]"
-            disabled={isLoading}
-            rows={1}
-          />
+              }}
+              placeholder="Type or speak..."
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                paddingRight: '3rem',
+                border: '1px solid #d1d5db',
+                borderRadius: '1rem',
+                outline: 'none',
+                resize: 'none',
+                overflow: 'hidden',
+                minHeight: '48px',
+                maxHeight: '120px',
+                fontSize: '0.875rem',
+                fontFamily: 'inherit',
+                backgroundColor: 'white'
+              }}
+              disabled={isLoading}
+              rows={1}
+            />
+            <button
+              type="button"
+              onClick={toggleListening}
+              style={{
+                position: 'absolute',
+                right: '0.25rem',
+                bottom: '0.25rem',
+                padding: '0.5rem',
+                borderRadius: '50%',
+                color: 'white',
+                border: 'none',
+                cursor: 'pointer',
+                backgroundColor: isListening ? '#ef4444' : '#4f46e5',
+                transition: 'background-color 0.3s ease'
+              }}
+              disabled={!speechApi}
+              aria-label={isListening ? 'Stop listening' : 'Start listening'}
+            >
+              <Mic size={20} />
+            </button>
+          </div>
           <button
-            type="button"
-            onClick={toggleListening}
-            className={`absolute right-1 bottom-1 p-2 rounded-full text-white transition-colors ${isListening ? 'bg-red-500 animate-pulse' : 'bg-primary hover:bg-primary-hover'}`}
-            disabled={!speechApi}
-            aria-label={isListening ? 'Stop listening' : 'Start listening'}
+            type="submit"
+            style={{
+              padding: '0.75rem',
+              borderRadius: '50%',
+              backgroundColor: isLoading || !userInput.trim() ? '#9ca3af' : '#4f46e5',
+              color: 'white',
+              border: 'none',
+              cursor: isLoading || !userInput.trim() ? 'not-allowed' : 'pointer',
+              flexShrink: 0,
+              transition: 'background-color 0.3s ease'
+            }}
+            disabled={isLoading || !userInput.trim()}
+            aria-label="Send message"
           >
-            <Mic size={20} />
+            <Send size={24} />
           </button>
-        </div>
-        <button
-          type="submit"
-          className="p-3 rounded-full bg-primary text-white disabled:bg-gray-400 shrink-0 transition-colors"
-          disabled={isLoading || !userInput.trim()}
-          aria-label="Send message"
-        >
-          <Send size={24} />
-        </button>
-      </form>
+        </form>
+      </div>
     </div>
   );
 };

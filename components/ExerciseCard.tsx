@@ -8,48 +8,76 @@ interface ExerciseCardProps {
     onDismiss?: () => void;
 }
 
-const categoryStyles: { [key in ExerciseCategory]: { icon: React.ElementType, color: string, borderColor: string } } = {
-    [ExerciseCategory.Grammar]: { icon: BrainCircuit, color: 'bg-blue-100 text-blue-800', borderColor: 'border-blue-500' },
-    [ExerciseCategory.Vocabulary]: { icon: BookText, color: 'bg-green-100 text-green-800', borderColor: 'border-green-500' },
-    [ExerciseCategory.Conversation]: { icon: MessageSquare, color: 'bg-purple-100 text-purple-800', borderColor: 'border-purple-500' },
+const categoryStyles: { [key in ExerciseCategory]: { icon: React.ElementType, bgColor: string, textColor: string, borderColor: string } } = {
+    [ExerciseCategory.Grammar]: { icon: BrainCircuit, bgColor: '#dbeafe', textColor: '#1e40af', borderColor: '#3b82f6' },
+    [ExerciseCategory.Vocabulary]: { icon: BookText, bgColor: '#dcfce7', textColor: '#166534', borderColor: '#22c55e' },
+    [ExerciseCategory.Conversation]: { icon: MessageSquare, bgColor: '#f3e8ff', textColor: '#7c3aed', borderColor: '#a855f7' },
 };
 
 const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, onDismiss }) => {
     const styles = categoryStyles[exercise.category] || categoryStyles[ExerciseCategory.Conversation];
-    const { icon: Icon, color, borderColor } = styles;
+    const { icon: Icon, bgColor, textColor, borderColor } = styles;
 
     return (
-        <Card className={`mb-4 border-l-4 ${borderColor} relative animate-fade-in`}>
+        <Card style={{ 
+            marginBottom: '1rem', 
+            borderLeft: `4px solid ${borderColor}`, 
+            position: 'relative' 
+        }} className="fade-in">
             {onDismiss && (
                 <button
                     onClick={onDismiss}
-                    className="absolute top-2 right-2 p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+                    style={{
+                        position: 'absolute',
+                        top: '0.5rem',
+                        right: '0.5rem',
+                        padding: '0.25rem',
+                        color: '#9ca3af',
+                        background: 'none',
+                        border: 'none',
+                        borderRadius: '50%',
+                        cursor: 'pointer',
+                        transition: 'all 0.3s ease'
+                    }}
                     aria-label="Dismiss exercise"
                 >
                     <X size={20} />
                 </button>
             )}
 
-            <div className="flex items-center mb-3">
-                <div className={`p-2 rounded-full ${color} mr-3`}>
-                    <Icon className="h-6 w-6" />
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.75rem' }}>
+                <div style={{ 
+                    padding: '0.5rem', 
+                    borderRadius: '50%', 
+                    backgroundColor: bgColor, 
+                    color: textColor, 
+                    marginRight: '0.75rem' 
+                }}>
+                    <Icon style={{ height: '1.5rem', width: '1.5rem' }} />
                 </div>
                 <div>
-                    <span className={`px-2.5 py-0.5 text-xs font-semibold rounded-full ${color}`}>
+                    <span style={{ 
+                        padding: '0.25rem 0.625rem', 
+                        fontSize: '0.75rem', 
+                        fontWeight: '600', 
+                        borderRadius: '9999px', 
+                        backgroundColor: bgColor, 
+                        color: textColor 
+                    }}>
                         {exercise.category}
                     </span>
-                    <h3 className="text-lg font-bold text-dark-text">{exercise.title}</h3>
+                    <h3 style={{ fontSize: '1.125rem', fontWeight: 'bold', color: '#1f2937', marginTop: '0.25rem' }}>{exercise.title}</h3>
                 </div>
             </div>
 
-            <div className="space-y-3 pl-1">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', paddingLeft: '0.25rem' }}>
                 <div>
-                    <h4 className="font-semibold text-md text-dark-text">Task:</h4>
-                    <p className="text-gray-600">{exercise.description}</p>
+                    <h4 style={{ fontWeight: '600', fontSize: '1rem', color: '#1f2937', marginBottom: '0.25rem' }}>Task:</h4>
+                    <p style={{ color: '#6b7280' }}>{exercise.description}</p>
                 </div>
                 <div>
-                    <h4 className="font-semibold text-md text-dark-text">Example:</h4>
-                    <p className="text-gray-600 italic">"{exercise.example}"</p>
+                    <h4 style={{ fontWeight: '600', fontSize: '1rem', color: '#1f2937', marginBottom: '0.25rem' }}>Example:</h4>
+                    <p style={{ color: '#6b7280', fontStyle: 'italic' }}>"{exercise.example}"</p>
                 </div>
             </div>
         </Card>

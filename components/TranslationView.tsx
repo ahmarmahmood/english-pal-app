@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Mic, Volume2 } from 'lucide-react';
+import { Mic, Volume2, AlertCircle } from 'lucide-react';
 import { translateUrduToEnglish } from '../services/openaiService';
 import Card from './common/Card';
 import Loader from './common/Loader';
@@ -18,6 +18,7 @@ const TranslationView: React.FC<TranslationViewProps> = ({ isTtsEnabled }) => {
     const [englishText, setEnglishText] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [recognition, setRecognition] = useState<any>(null);
+    const [permissionDenied, setPermissionDenied] = useState(false);
 
     const speak = useCallback((text: string) => {
         if (!text || !isTtsEnabled || !window.speechSynthesis) return;
@@ -43,22 +44,36 @@ const TranslationView: React.FC<TranslationViewProps> = ({ isTtsEnabled }) => {
         }
     }, [speak]);
 
-    const toggleListening = () => {
+    const toggleListening = async () => {
         if (!recognition) return;
+        
         if (isListening) {
             recognition.stop();
         } else {
             setUrduText('');
             setEnglishText('');
             setError(null);
-            recognition.start();
+            setPermissionDenied(false);
+            
+            try {
+                // Request microphone permission first
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                stream.getTracks().forEach(track => track.stop()); // Stop the stream immediately
+                
+                // If permission granted, start recognition
+                recognition.start();
+            } catch (permissionError) {
+                setPermissionDenied(true);
+                setError('Microphone access denied. Please allow microphone access in your browser settings.');
+                return;
+            }
         }
         setIsListening(!isListening);
     };
     
     useEffect(() => {
         if (!SpeechRecognition) {
-            setError("Speech Recognition API is not supported in this browser.");
+            setError("Speech Recognition API is not supported in this browser. Please use Chrome, Edge, or Safari.");
             return;
         }
         const rec = new SpeechRecognition();
@@ -77,7 +92,18 @@ const TranslationView: React.FC<TranslationViewProps> = ({ isTtsEnabled }) => {
         };
         
         rec.onerror = (event: any) => {
-            setError(`Speech recognition error: ${event.error}`);
+            console.error('Speech recognition error:', event.error);
+            
+            if (event.error === 'not-allowed' || event.error === 'permission-denied') {
+                setPermissionDenied(true);
+                setError('Microphone access denied. Please allow microphone access in your browser settings and refresh the page.');
+            } else if (event.error === 'no-speech') {
+                setError('No speech detected. Please try speaking again.');
+            } else if (event.error === 'network') {
+                setError('Network error. Please check your internet connection.');
+            } else {
+                setError(`Speech recognition error: ${event.error}. Please try again.`);
+            }
             setIsListening(false);
         };
 
@@ -87,6 +113,17 @@ const TranslationView: React.FC<TranslationViewProps> = ({ isTtsEnabled }) => {
             rec.stop();
         };
     }, [handleTranslate]);
+
+    const getPermissionInstructions = () => {
+        if (navigator.userAgent.includes('Chrome')) {
+            return 'Click the microphone icon in the address bar and select "Allow"';
+        } else if (navigator.userAgent.includes('Safari')) {
+            return 'Go to Safari > Preferences > Websites > Microphone and allow access';
+        } else if (navigator.userAgent.includes('Firefox')) {
+            return 'Click the microphone icon in the address bar and select "Allow"';
+        }
+        return 'Check your browser settings and allow microphone access';
+    };
 
     return (
         <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
@@ -122,11 +159,33 @@ const TranslationView: React.FC<TranslationViewProps> = ({ isTtsEnabled }) => {
                 </div>
             </Card>
 
-            {error && <p style={{ color: '#ef4444', textAlign: 'center', marginTop: '1rem' }}>{error}</p>}
+            {error && (
+                <div style={{ 
+                    marginTop: '1rem', 
+                    padding: '1rem', 
+                    backgroundColor: '#fef2f2', 
+                    border: '1px solid #fecaca', 
+                    borderRadius: '0.5rem',
+                    maxWidth: '28rem',
+                    width: '100%'
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                        <AlertCircle size={20} color="#ef4444" />
+                        <span style={{ color: '#ef4444', fontWeight: '600' }}>Error</span>
+                    </div>
+                    <p style={{ color: '#ef4444', fontSize: '0.875rem', marginBottom: '0.5rem' }}>{error}</p>
+                    {permissionDenied && (
+                        <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                            <strong>How to fix:</strong> {getPermissionInstructions()}
+                        </div>
+                    )}
+                </div>
+            )}
             
             <div style={{ marginTop: '2rem', textAlign: 'center' }}>
                 <button
                     onClick={toggleListening}
+                    disabled={permissionDenied}
                     style={{
                         width: '5rem',
                         height: '5rem',
@@ -138,14 +197,17 @@ const TranslationView: React.FC<TranslationViewProps> = ({ isTtsEnabled }) => {
                         margin: '0 auto',
                         boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
                         border: 'none',
-                        cursor: 'pointer',
-                        backgroundColor: isListening ? '#ef4444' : '#4f46e5',
-                        transition: 'all 0.2s ease-in-out'
+                        cursor: permissionDenied ? 'not-allowed' : 'pointer',
+                        backgroundColor: permissionDenied ? '#9ca3af' : (isListening ? '#ef4444' : '#4f46e5'),
+                        transition: 'all 0.2s ease-in-out',
+                        opacity: permissionDenied ? 0.6 : 1
                     }}
                 >
                     <Mic size={40} />
                 </button>
-                <p style={{ marginTop: '1rem', color: '#6b7280' }}>{isListening ? 'Listening...' : 'Tap to speak'}</p>
+                <p style={{ marginTop: '1rem', color: '#6b7280' }}>
+                    {permissionDenied ? 'Microphone access needed' : (isListening ? 'Listening...' : 'Tap to speak')}
+                </p>
             </div>
         </div>
     );

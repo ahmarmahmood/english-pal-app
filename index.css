@@ -44,6 +44,8 @@ body {
   padding: 1.5rem;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   min-height: calc(100vh - 200px);
+  /* Add bottom padding to prevent content from being hidden behind navigation */
+  padding-bottom: calc(1.5rem + 80px);
 }
 
 .section-title {
@@ -130,6 +132,8 @@ body {
   left: 0;
   right: 0;
   box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  height: 80px;
 }
 
 .nav-item {
@@ -231,15 +235,48 @@ body {
   }
 }
 
+/* Chat specific styles */
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  /* Ensure chat content doesn't overlap with navigation */
+  padding-bottom: 80px;
+}
+
+.chat-messages {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  /* Add bottom margin to prevent overlap with input area */
+  margin-bottom: 1rem;
+}
+
+.chat-input-area {
+  position: fixed;
+  bottom: 80px;
+  left: 0;
+  right: 0;
+  background: white;
+  padding: 1rem;
+  border-top: 1px solid #e5e7eb;
+  z-index: 999;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .main-content {
     margin: 0.5rem;
     padding: 1rem;
+    padding-bottom: calc(1rem + 80px);
   }
   
   .header {
     margin: 0 0.5rem;
+  }
+  
+  .chat-input-area {
+    padding: 0.75rem;
   }
 }
 

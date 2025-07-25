@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Mic, ArrowLeft, RefreshCw, Volume2 } from 'lucide-react';
+import { Mic, ArrowLeft, RefreshCw, Volume2, Lightbulb } from 'lucide-react';
 import { Story } from '../types';
 
 interface ReadingStoryReaderProps {
@@ -10,22 +10,85 @@ interface ReadingStoryReaderProps {
 
 const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
-const getSpeakingLevel = (score: number | null): { level: string, color: string } | null => {
+const getPronunciationLevel = (score: number | null): { level: string, color: string, feedback: string } | null => {
     if (score === null) return null;
-    if (score >= 90) return { level: 'Excellent!', color: 'text-green-600' };
-    if (score >= 75) return { level: 'Great!', color: 'text-blue-600' };
-    if (score >= 60) return { level: 'Good', color: 'text-yellow-600' };
-    return { level: 'Keep Practicing', color: 'text-red-500' };
+    if (score >= 90) return { 
+        level: 'Excellent Pronunciation!', 
+        color: '#059669', 
+        feedback: 'Your pronunciation is very clear and accurate. Great job!' 
+    };
+    if (score >= 75) return { 
+        level: 'Good Pronunciation!', 
+        color: '#2563eb', 
+        feedback: 'Your pronunciation is good. Try to slow down and enunciate more clearly.' 
+    };
+    if (score >= 60) return { 
+        level: 'Fair Pronunciation', 
+        color: '#ca8a04', 
+        feedback: 'Your pronunciation needs improvement. Focus on clear articulation and word stress.' 
+    };
+    return { 
+        level: 'Needs Practice', 
+        color: '#dc2626', 
+        feedback: 'Your pronunciation needs work. Practice speaking slowly and clearly, focusing on each sound.' 
+    };
+};
+
+const getPronunciationSuggestions = (score: number, confidence: number, transcript: string, storyContent: string): string[] => {
+    const suggestions: string[] = [];
+    
+    if (score < 60) {
+        suggestions.push(
+            "🗣️ Speak louder and more clearly",
+            "⏱️ Slow down your speech pace",
+            "🎯 Focus on each word individually",
+            "📏 Practice with shorter sentences first"
+        );
+    } else if (score < 75) {
+        suggestions.push(
+            "🔊 Increase your volume slightly",
+            "🎵 Pay attention to word stress patterns",
+            "👄 Enunciate consonants more clearly",
+            "🔄 Practice difficult words repeatedly"
+        );
+    } else if (score < 90) {
+        suggestions.push(
+            "🎤 Maintain consistent volume",
+            "📝 Work on sentence intonation",
+            "🎭 Add more expression to your voice",
+            "📚 Practice with different text types"
+        );
+    } else {
+        suggestions.push(
+            "🌟 Excellent work! Keep practicing",
+            "🎯 Try more challenging texts",
+            "🌍 Practice different accents",
+            "📖 Read aloud regularly to maintain skills"
+        );
+    }
+    
+    // Add specific suggestions based on confidence
+    if (confidence < 0.5) {
+        suggestions.push("🎧 Check your microphone and environment");
+    }
+    
+    if (transcript.length < storyContent.length * 0.3) {
+        suggestions.push("📖 Try reading the entire story");
+    }
+    
+    return suggestions.slice(0, 4); // Limit to 4 suggestions
 };
 
 const ReadingStoryReader: React.FC<ReadingStoryReaderProps> = ({ story, onBack }) => {
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [transcript, setTranscript] = useState('');
-  const [score, setScore] = useState<number | null>(null);
+  const [pronunciationScore, setPronunciationScore] = useState<number | null>(null);
   const [recognition, setRecognition] = useState<any>(null);
   const [highlightedWordIndex, setHighlightedWordIndex] = useState<number | null>(null);
+  const [currentSpokenWordIndex, setCurrentSpokenWordIndex] = useState<number | null>(null);
   const [femaleVoice, setFemaleVoice] = useState<SpeechSynthesisVoice | null>(null);
+  const [confidenceScores, setConfidenceScores] = useState<number[]>([]);
 
   // Find and set a female voice
   useEffect(() => {
@@ -60,25 +123,6 @@ const ReadingStoryReader: React.FC<ReadingStoryReaderProps> = ({ story, onBack }
         return { start, index };
     });
   }, [story.content, storyWords]);
-
-  const correctWords = useMemo(() => {
-    const spokenWords = transcript.trim().toLowerCase().split(/\s+/).filter(w => w);
-    const correct = new Set<number>();
-    if (spokenWords.length === 0) return correct;
-
-    let lastFoundIndex = -1;
-    spokenWords.forEach(spokenWord => {
-      const cleanSpokenWord = spokenWord.replace(/[.,!?]/g, '');
-      const foundIndex = storyWords.findIndex((storyWord, index) => 
-        index > lastFoundIndex && storyWord.toLowerCase().replace(/[.,!?]/g, '') === cleanSpokenWord
-      );
-      if (foundIndex !== -1) {
-        correct.add(foundIndex);
-        lastFoundIndex = foundIndex;
-      }
-    });
-    return correct;
-  }, [transcript, storyWords]);
 
   const speak = useCallback(() => {
     if (!story.content || !window.speechSynthesis || isSpeaking) return;
@@ -123,19 +167,26 @@ const ReadingStoryReader: React.FC<ReadingStoryReaderProps> = ({ story, onBack }
     window.speechSynthesis.speak(utterance);
   }, [story.content, femaleVoice, isSpeaking, wordBoundaries]);
 
-  const calculateFinalScore = useCallback(() => {
-    const finalCorrectCount = correctWords.size;
-    const finalScore = (finalCorrectCount / storyWords.length) * 100;
-    setScore(Math.round(finalScore));
-  }, [correctWords.size, storyWords.length]);
+  const calculatePronunciationScore = useCallback(() => {
+    if (confidenceScores.length === 0) return;
+    
+    // Calculate average confidence score
+    const averageConfidence = confidenceScores.reduce((sum, score) => sum + score, 0) / confidenceScores.length;
+    
+    // Convert confidence to pronunciation score (0-100)
+    const pronunciationScore = Math.round(averageConfidence * 100);
+    setPronunciationScore(pronunciationScore);
+  }, [confidenceScores]);
   
   const startListening = useCallback(() => {
     if (!recognition || isListening || isSpeaking) return;
     window.speechSynthesis.cancel();
     setIsSpeaking(false);
     setHighlightedWordIndex(null);
+    setCurrentSpokenWordIndex(null);
     setTranscript('');
-    setScore(null);
+    setPronunciationScore(null);
+    setConfidenceScores([]);
     setIsListening(true);
     recognition.start();
   }, [recognition, isListening, isSpeaking]);
@@ -146,13 +197,12 @@ const ReadingStoryReader: React.FC<ReadingStoryReaderProps> = ({ story, onBack }
     recognition.stop();
   }, [recognition, isListening]);
 
-  // Calculate score when listening stops
+  // Calculate pronunciation score when listening stops
   useEffect(() => {
-    if (!isListening && transcript.length > 0) {
-        calculateFinalScore();
+    if (!isListening && confidenceScores.length > 0) {
+        calculatePronunciationScore();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isListening]);
+  }, [isListening, confidenceScores, calculatePronunciationScore]);
 
   const reset = () => {
     if (isListening) {
@@ -162,8 +212,10 @@ const ReadingStoryReader: React.FC<ReadingStoryReaderProps> = ({ story, onBack }
     setIsListening(false);
     setIsSpeaking(false);
     setTranscript('');
-    setScore(null);
+    setPronunciationScore(null);
     setHighlightedWordIndex(null);
+    setCurrentSpokenWordIndex(null);
+    setConfidenceScores([]);
   };
   
   const handleBack = () => {
@@ -183,14 +235,35 @@ const ReadingStoryReader: React.FC<ReadingStoryReaderProps> = ({ story, onBack }
 
     rec.onresult = (event: any) => {
       let fullTranscript = '';
+      const newConfidenceScores: number[] = [];
+      
       for (let i = 0; i < event.results.length; i++) {
-        fullTranscript += event.results[i][0].transcript;
+        const result = event.results[i];
+        fullTranscript += result[0].transcript;
+        
+        // Collect confidence scores for pronunciation assessment
+        if (result.isFinal) {
+          newConfidenceScores.push(result[0].confidence);
+        }
       }
+      
       setTranscript(fullTranscript);
+      setConfidenceScores(newConfidenceScores);
+      
+      // Highlight current word being spoken for visual feedback
+      const spokenWords = fullTranscript.trim().toLowerCase().split(/\s+/).filter(w => w);
+      if (spokenWords.length > 0) {
+        const lastSpokenWord = spokenWords[spokenWords.length - 1].replace(/[.,!?]/g, '');
+        const currentIndex = storyWords.findIndex((storyWord, index) => 
+          storyWord.toLowerCase().replace(/[.,!?]/g, '') === lastSpokenWord
+        );
+        setCurrentSpokenWordIndex(currentIndex !== -1 ? currentIndex : null);
+      }
     };
 
     rec.onend = () => {
       setIsListening(false);
+      setCurrentSpokenWordIndex(null);
     };
     
     setRecognition(rec);
@@ -198,33 +271,91 @@ const ReadingStoryReader: React.FC<ReadingStoryReaderProps> = ({ story, onBack }
     return () => {
         rec.stop();
     };
-  }, []);
+  }, [storyWords]);
 
-  const speakingLevelInfo = getSpeakingLevel(score);
+  const pronunciationLevelInfo = getPronunciationLevel(pronunciationScore);
+  const averageConfidence = confidenceScores.length > 0 ? confidenceScores.reduce((sum, score) => sum + score, 0) / confidenceScores.length : 0;
+  const suggestions = pronunciationScore !== null ? getPronunciationSuggestions(pronunciationScore, averageConfidence, transcript, story.content) : [];
 
   return (
-    <div className="flex flex-col h-full animate-fade-in">
-      <div className="flex items-center justify-between mb-4">
-        <button onClick={handleBack} className="p-2 text-gray-600 hover:text-dark-text" aria-label="Go back">
+    <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+        <button 
+          onClick={handleBack} 
+          style={{ 
+            padding: '0.5rem', 
+            color: '#6b7280', 
+            background: 'none', 
+            border: 'none', 
+            cursor: 'pointer' 
+          }} 
+          aria-label="Go back"
+        >
           <ArrowLeft size={24} />
         </button>
-        <h2 className="text-lg font-bold text-center text-dark-text truncate px-2">{story.title}</h2>
-        <div className="flex items-center">
-          <button onClick={speak} disabled={isSpeaking || isListening} className="p-2 text-gray-600 hover:text-dark-text disabled:text-gray-300" aria-label="Listen to story">
+        <h2 style={{ 
+          fontSize: '1.125rem', 
+          fontWeight: 'bold', 
+          textAlign: 'center', 
+          color: '#1f2937', 
+          overflow: 'hidden', 
+          textOverflow: 'ellipsis', 
+          whiteSpace: 'nowrap', 
+          padding: '0 0.5rem' 
+        }}>
+          {story.title}
+        </h2>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <button 
+            onClick={speak} 
+            disabled={isSpeaking || isListening} 
+            style={{ 
+              padding: '0.5rem', 
+              color: isSpeaking || isListening ? '#d1d5db' : '#6b7280', 
+              background: 'none', 
+              border: 'none', 
+              cursor: isSpeaking || isListening ? 'not-allowed' : 'pointer' 
+            }} 
+            aria-label="Listen to story"
+          >
             <Volume2 size={22} />
           </button>
-          <button onClick={reset} className="p-2 text-gray-600 hover:text-dark-text" aria-label="Reset practice">
+          <button 
+            onClick={reset} 
+            style={{ 
+              padding: '0.5rem', 
+              color: '#6b7280', 
+              background: 'none', 
+              border: 'none', 
+              cursor: 'pointer' 
+            }} 
+            aria-label="Reset practice"
+          >
             <RefreshCw size={20} />
           </button>
         </div>
       </div>
 
-      <div className="bg-white p-6 rounded-lg shadow-inner flex-grow overflow-y-auto">
-        <p className="text-xl leading-relaxed text-dark-text">
+      <div style={{ 
+        backgroundColor: 'white', 
+        padding: '1.5rem', 
+        borderRadius: '0.5rem', 
+        boxShadow: 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.06)', 
+        flexGrow: 1, 
+        overflowY: 'auto' 
+      }}>
+        <p style={{ fontSize: '1.25rem', lineHeight: '1.75', color: '#1f2937' }}>
           {storyWords.map((word, index) => (
-            <span key={index} className={`transition-colors duration-150 rounded px-0.5
-              ${correctWords.has(index) ? 'bg-green-100 text-green-700' : ''} 
-              ${isSpeaking && highlightedWordIndex === index ? 'bg-yellow-200' : ''}`}
+            <span 
+              key={index} 
+              style={{
+                transition: 'all 0.15s ease',
+                borderRadius: '0.125rem',
+                padding: '0 0.125rem',
+                backgroundColor: (isSpeaking && highlightedWordIndex === index) ? '#fef3c7' :
+                                 (isListening && currentSpokenWordIndex === index) ? '#dbeafe' : 'transparent',
+                color: '#1f2937'
+              }}
             >
               {word}{' '}
             </span>
@@ -232,29 +363,83 @@ const ReadingStoryReader: React.FC<ReadingStoryReaderProps> = ({ story, onBack }
         </p>
       </div>
       
-      <div className="mt-4 text-center min-h-[120px] flex flex-col justify-center items-center">
-         {score !== null && !isListening && speakingLevelInfo && (
-            <div className="mb-4 animate-fade-in">
-                <p className={`text-2xl font-bold ${speakingLevelInfo.color}`}>{speakingLevelInfo.level}</p>
-                <p className="text-xl font-bold">Your Score: <span className="text-primary">{score}%</span></p>
-                <p className="text-sm text-gray-500">{correctWords.size} / {storyWords.length} words correct</p>
+      <div style={{ marginTop: '1rem', textAlign: 'center', minHeight: '120px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+         {pronunciationScore !== null && !isListening && pronunciationLevelInfo && (
+            <div className="fade-in" style={{ marginBottom: '1rem', width: '100%' }}>
+                <p style={{ fontSize: '1.5rem', fontWeight: 'bold', color: pronunciationLevelInfo.color }}>
+                  {pronunciationLevelInfo.level}
+                </p>
+                <p style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>
+                  Pronunciation Score: <span style={{ color: '#4f46e5' }}>{pronunciationScore}%</span>
+                </p>
+                <p style={{ fontSize: '0.875rem', color: '#6b7280', maxWidth: '300px', margin: '0.5rem auto' }}>
+                  {pronunciationLevelInfo.feedback}
+                </p>
+                <p style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: '0.5rem' }}>
+                  Confidence: {Math.round(averageConfidence * 100)}%
+                </p>
+                
+                {/* AI Suggestions */}
+                <div style={{ 
+                  marginTop: '1rem', 
+                  padding: '1rem', 
+                  backgroundColor: '#f8fafc', 
+                  borderRadius: '0.5rem', 
+                  border: '1px solid #e2e8f0' 
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                    <Lightbulb size={16} color="#f59e0b" />
+                    <span style={{ fontSize: '0.875rem', fontWeight: '600', color: '#1f2937' }}>
+                      AI Suggestions for Improvement
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    {suggestions.map((suggestion, index) => (
+                      <div key={index} style={{ 
+                        fontSize: '0.75rem', 
+                        color: '#4b5563', 
+                        textAlign: 'left',
+                        padding: '0.25rem 0'
+                      }}>
+                        {suggestion}
+                      </div>
+                    ))}
+                  </div>
+                </div>
             </div>
         )}
 
-        {(score === null || isListening) && (
+        {(pronunciationScore === null || isListening) && (
             <>
                 <button
                 onClick={isListening ? stopListening : startListening}
                 disabled={isSpeaking}
-                className={`w-16 h-16 rounded-full text-white flex items-center justify-center mx-auto shadow-lg transform transition-all duration-200 ease-in-out mb-2 ${
-                    isListening ? 'bg-red-500 animate-pulse' : 'bg-primary hover:bg-primary-hover'
-                } disabled:bg-gray-400`}
+                style={{
+                    width: '4rem',
+                    height: '4rem',
+                    borderRadius: '50%',
+                    color: 'white',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto 0.5rem auto',
+                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                    border: 'none',
+                    cursor: isSpeaking ? 'not-allowed' : 'pointer',
+                    backgroundColor: isSpeaking ? '#9ca3af' : (isListening ? '#ef4444' : '#4f46e5'),
+                    transition: 'all 0.2s ease-in-out'
+                }}
                 >
                 <Mic size={32} />
                 </button>
-                <p className="text-sm text-gray-500">
-                    {isSpeaking ? 'The app is reading...' : (isListening ? 'Listening...' : 'Tap to start reading')}
+                <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+                    {isSpeaking ? 'The app is reading...' : (isListening ? 'Listening...' : 'Tap to practice pronunciation')}
                 </p>
+                {isListening && (
+                  <p style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: '0.25rem' }}>
+                    Read the story aloud to practice your pronunciation
+                  </p>
+                )}
             </>
         )}
       </div>
