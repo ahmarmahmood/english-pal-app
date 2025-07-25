@@ -45,25 +45,34 @@ const ReadingView: React.FC = () => {
   }
 
   return (
-    <div className="animate-fade-in">
-      <h2 className="text-2xl font-bold text-dark-text mb-1 text-center">Reading Practice</h2>
-      <p className="text-center text-gray-500 mb-6">Select a story to test your pronunciation.</p>
+    <div className="fade-in">
+      <h2 className="section-title">Reading Practice</h2>
+      <p className="section-subtitle">Select a story to test your pronunciation.</p>
       
       {isLoading && <Loader text="Finding stories for you..." />}
-      {error && <div className="text-center text-red-500 p-4">{error}</div>}
+      {error && <div style={{ textAlign: 'center', color: '#ef4444', padding: '1rem' }}>{error}</div>}
 
       {!isLoading && !error && (
-        <div className="space-y-4">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           {stories.map((story, index) => (
-            <Card key={index} className="hover:shadow-lg hover:border-primary border-transparent border-2 transition-all duration-300 cursor-pointer">
-              <button onClick={() => handleSelectStory(story)} className="w-full text-left">
-                <div className="flex items-start gap-4">
-                  <div className="bg-green-100 text-secondary p-3 rounded-full">
+            <Card key={index} className="card">
+              <button 
+                onClick={() => handleSelectStory(story)} 
+                style={{ 
+                  width: '100%', 
+                  textAlign: 'left', 
+                  background: 'none', 
+                  border: 'none', 
+                  cursor: 'pointer' 
+                }}
+              >
+                <div className="card-content">
+                  <div className="card-icon">
                      <BookOpen size={24}/>
                   </div>
-                  <div>
-                    <h3 className="font-bold text-lg text-dark-text">{story.title}</h3>
-                    <p className="text-gray-600 text-sm line-clamp-2">{story.content}</p>
+                  <div className="card-text">
+                    <h3 className="card-title">{story.title}</h3>
+                    <p className="card-description">{story.content}</p>
                   </div>
                 </div>
               </button>

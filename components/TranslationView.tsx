@@ -89,40 +89,63 @@ const TranslationView: React.FC<TranslationViewProps> = ({ isTtsEnabled }) => {
     }, [handleTranslate]);
 
     return (
-        <div className="flex flex-col items-center justify-center h-full animate-fade-in">
-            <h2 className="text-2xl font-bold text-dark-text mb-1 text-center">Urdu to English</h2>
-            <p className="text-center text-gray-500 mb-6">Tap the mic and speak in Urdu. I'll translate it to English for you.</p>
+        <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+            <h2 className="section-title">Urdu to English</h2>
+            <p className="section-subtitle">Tap the mic and speak in Urdu. I'll translate it to English for you.</p>
 
-            <Card className="w-full max-w-md space-y-4">
-                <div>
-                    <h3 className="font-semibold text-lg text-gray-500 mb-2">Urdu (Spoken)</h3>
-                    <p className="min-h-[50px] p-2 bg-gray-100 rounded-md text-dark-text text-lg">{urduText || "..."}</p>
-                </div>
-                <div>
-                    <h3 className="font-semibold text-lg text-gray-500 mb-2">English (Translation)</h3>
-                    <div className="min-h-[50px] p-2 bg-gray-100 rounded-md text-dark-text text-lg flex justify-between items-center">
-                       {isLoading ? <Loader text="" /> : <span>{englishText || "..."}</span>}
-                       {englishText && !isLoading && (
-                           <button onClick={() => speak(englishText)} className="p-2 text-primary hover:text-primary-hover">
-                               <Volume2 size={22} />
-                           </button>
-                       )}
+            <Card style={{ width: '100%', maxWidth: '28rem' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <div>
+                        <h3 style={{ fontWeight: '600', fontSize: '1.125rem', color: '#6b7280', marginBottom: '0.5rem' }}>Urdu (Spoken)</h3>
+                        <p style={{ minHeight: '50px', padding: '0.5rem', backgroundColor: '#f3f4f6', borderRadius: '0.375rem', color: '#1f2937', fontSize: '1.125rem' }}>{urduText || "..."}</p>
+                    </div>
+                    <div>
+                        <h3 style={{ fontWeight: '600', fontSize: '1.125rem', color: '#6b7280', marginBottom: '0.5rem' }}>English (Translation)</h3>
+                        <div style={{ minHeight: '50px', padding: '0.5rem', backgroundColor: '#f3f4f6', borderRadius: '0.375rem', color: '#1f2937', fontSize: '1.125rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                           {isLoading ? <Loader text="" /> : <span>{englishText || "..."}</span>}
+                           {englishText && !isLoading && (
+                               <button 
+                                   onClick={() => speak(englishText)} 
+                                   style={{ 
+                                       padding: '0.5rem', 
+                                       color: '#4f46e5', 
+                                       background: 'none', 
+                                       border: 'none', 
+                                       cursor: 'pointer' 
+                                   }}
+                               >
+                                   <Volume2 size={22} />
+                               </button>
+                           )}
+                        </div>
                     </div>
                 </div>
             </Card>
 
-            {error && <p className="text-red-500 text-center mt-4">{error}</p>}
+            {error && <p style={{ color: '#ef4444', textAlign: 'center', marginTop: '1rem' }}>{error}</p>}
             
-            <div className="mt-8 text-center">
+            <div style={{ marginTop: '2rem', textAlign: 'center' }}>
                 <button
                     onClick={toggleListening}
-                    className={`w-20 h-20 rounded-full text-white flex items-center justify-center mx-auto shadow-lg transform transition-all duration-200 ease-in-out ${
-                        isListening ? 'bg-red-500 animate-pulse' : 'bg-primary hover:bg-primary-hover'
-                    }`}
+                    style={{
+                        width: '5rem',
+                        height: '5rem',
+                        borderRadius: '50%',
+                        color: 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        margin: '0 auto',
+                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                        border: 'none',
+                        cursor: 'pointer',
+                        backgroundColor: isListening ? '#ef4444' : '#4f46e5',
+                        transition: 'all 0.2s ease-in-out'
+                    }}
                 >
                     <Mic size={40} />
                 </button>
-                <p className="mt-4 text-gray-500">{isListening ? 'Listening...' : 'Tap to speak'}</p>
+                <p style={{ marginTop: '1rem', color: '#6b7280' }}>{isListening ? 'Listening...' : 'Tap to speak'}</p>
             </div>
         </div>
     );

@@ -69,39 +69,75 @@ const ChatView: React.FC<ChatViewProps> = ({ isTtsEnabled }) => {
     };
 
     const renderCategorySelection = () => (
-        <div className="animate-fade-in">
-             <h2 className="text-2xl font-bold text-dark-text mb-1 text-center">Chat Practice</h2>
-             <p className="text-center text-gray-500 mb-6">Choose a topic to start a conversation with your AI tutor.</p>
-            <div className="space-y-4">
-                <Card className="hover:shadow-lg hover:border-primary border-transparent border-2 transition-all duration-300">
-                    <button onClick={() => handleSelectCategory(ExerciseCategory.Grammar)} className="w-full text-left p-4">
-                         <div className="flex items-center gap-4">
-                            <div className="bg-blue-100 text-blue-800 p-3 rounded-full"><BrainCircuit size={30} /></div>
-                            <div>
-                                <h3 className="text-xl font-bold text-dark-text">Grammar</h3>
-                                <p className="text-gray-600">Practice sentence structure, tenses, and more.</p>
+        <div className="fade-in">
+             <h2 className="section-title">Chat Practice</h2>
+             <p className="section-subtitle">Choose a topic to start a conversation with your AI tutor.</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <Card className="card">
+                    <button 
+                        onClick={() => handleSelectCategory(ExerciseCategory.Grammar)} 
+                        style={{ 
+                            width: '100%', 
+                            textAlign: 'left', 
+                            padding: '1rem',
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer'
+                        }}
+                    >
+                         <div className="card-content">
+                            <div style={{ backgroundColor: '#dbeafe', color: '#1e40af', padding: '0.75rem', borderRadius: '50%' }}>
+                                <BrainCircuit size={30} />
+                            </div>
+                            <div className="card-text">
+                                <h3 className="card-title">Grammar</h3>
+                                <p className="card-description">Practice sentence structure, tenses, and more.</p>
                             </div>
                          </div>
                     </button>
                 </Card>
-                 <Card className="hover:shadow-lg hover:border-green-500 border-transparent border-2 transition-all duration-300">
-                    <button onClick={() => handleSelectCategory(ExerciseCategory.Vocabulary)} className="w-full text-left p-4">
-                         <div className="flex items-center gap-4">
-                            <div className="bg-green-100 text-green-800 p-3 rounded-full"><BookText size={30} /></div>
-                            <div>
-                                <h3 className="text-xl font-bold text-dark-text">Vocabulary</h3>
-                                <p className="text-gray-600">Learn new words and how to use them in context.</p>
+                 <Card className="card">
+                    <button 
+                        onClick={() => handleSelectCategory(ExerciseCategory.Vocabulary)} 
+                        style={{ 
+                            width: '100%', 
+                            textAlign: 'left', 
+                            padding: '1rem',
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer'
+                        }}
+                    >
+                         <div className="card-content">
+                            <div style={{ backgroundColor: '#dcfce7', color: '#166534', padding: '0.75rem', borderRadius: '50%' }}>
+                                <BookText size={30} />
+                            </div>
+                            <div className="card-text">
+                                <h3 className="card-title">Vocabulary</h3>
+                                <p className="card-description">Learn new words and how to use them in context.</p>
                             </div>
                          </div>
                     </button>
                 </Card>
-                 <Card className="hover:shadow-lg hover:border-purple-500 border-transparent border-2 transition-all duration-300">
-                    <button onClick={() => handleSelectCategory(ExerciseCategory.Conversation)} className="w-full text-left p-4">
-                         <div className="flex items-center gap-4">
-                            <div className="bg-purple-100 text-purple-800 p-3 rounded-full"><MessageSquare size={30} /></div>
-                            <div>
-                                <h3 className="text-xl font-bold text-dark-text">Conversation</h3>
-                                <p className="text-gray-600">Practice speaking on various topics and get feedback.</p>
+                 <Card className="card">
+                    <button 
+                        onClick={() => handleSelectCategory(ExerciseCategory.Conversation)} 
+                        style={{ 
+                            width: '100%', 
+                            textAlign: 'left', 
+                            padding: '1rem',
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer'
+                        }}
+                    >
+                         <div className="card-content">
+                            <div style={{ backgroundColor: '#f3e8ff', color: '#7c3aed', padding: '0.75rem', borderRadius: '50%' }}>
+                                <MessageSquare size={30} />
+                            </div>
+                            <div className="card-text">
+                                <h3 className="card-title">Conversation</h3>
+                                <p className="card-description">Practice speaking on various topics and get feedback.</p>
                             </div>
                          </div>
                     </button>
@@ -116,9 +152,15 @@ const ChatView: React.FC<ChatViewProps> = ({ isTtsEnabled }) => {
 
     if (error) {
         return (
-            <div className="text-center p-4">
-                <p className="text-red-500">{error}</p>
-                <button onClick={handleGoBack} className="mt-4 px-4 py-2 bg-primary text-white rounded-lg">Try Again</button>
+            <div style={{ textAlign: 'center', padding: '1rem' }}>
+                <p style={{ color: '#ef4444' }}>{error}</p>
+                <button 
+                    onClick={handleGoBack} 
+                    className="btn"
+                    style={{ marginTop: '1rem' }}
+                >
+                    Try Again
+                </button>
             </div>
         );
     }
