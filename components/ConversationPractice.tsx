@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Send, Mic, ArrowLeft } from 'lucide-react';
+import { Send, Mic, ArrowLeft, VolumeX } from 'lucide-react';
 import { createChat, getConversationFeedback } from '../services/openaiService';
 import { ChatMessage, MessageRole, Exercise, Feedback, ExerciseCategory } from '../types';
 import Loader from './common/Loader';
@@ -20,6 +20,7 @@ const ConversationPractice: React.FC<ConversationPracticeProps> = ({ exercise, o
   const [userInput, setUserInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const [speechApi, setSpeechApi] = useState<{ recognition: any, synthesis: SpeechSynthesis } | null>(null);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [isGeneratingFeedback, setIsGeneratingFeedback] = useState(false);
@@ -28,11 +29,39 @@ const ConversationPractice: React.FC<ConversationPracticeProps> = ({ exercise, o
   const formRef = useRef<HTMLFormElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // Improved auto-resize function
+  const resizeTextarea = useCallback(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 120) + 'px';
+    }
+  }, []);
+
+  const stopSpeaking = useCallback(() => {
+    if (speechApi?.synthesis) {
+      speechApi.synthesis.cancel();
+      setIsSpeaking(false);
+    }
+  }, [speechApi]);
+
   const speak = useCallback((text: string) => {
     if (!text || !isTtsEnabled || !speechApi?.synthesis) return;
     speechApi.synthesis.cancel(); // Cancel any previous speech
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'en-US';
+    
+    utterance.onstart = () => {
+      setIsSpeaking(true);
+    };
+    
+    utterance.onend = () => {
+      setIsSpeaking(false);
+    };
+    
+    utterance.onerror = () => {
+      setIsSpeaking(false);
+    };
+    
     speechApi.synthesis.speak(utterance);
   }, [isTtsEnabled, speechApi]);
 
@@ -60,12 +89,10 @@ const ConversationPractice: React.FC<ConversationPracticeProps> = ({ exercise, o
       setUserInput(newText);
       
       // Auto-resize the textarea when speech input is received
-      setTimeout(() => {
-        if (textareaRef.current) {
-          textareaRef.current.style.height = 'auto';
-          textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 120) + 'px';
-        }
-      }, 10);
+      // Use requestAnimationFrame for better timing
+      requestAnimationFrame(() => {
+        resizeTextarea();
+      });
     };
 
     recognition.onend = () => {
@@ -81,7 +108,7 @@ const ConversationPractice: React.FC<ConversationPracticeProps> = ({ exercise, o
     return () => {
         recognition.stop();
     };
-  }, []);
+  }, [resizeTextarea]);
 
   useEffect(() => {
     const chatInstance = createChat(exercise);
@@ -114,11 +141,8 @@ const ConversationPractice: React.FC<ConversationPracticeProps> = ({ exercise, o
 
   // Auto-resize textarea when userInput changes
   useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 120) + 'px';
-    }
-  }, [userInput]);
+    resizeTextarea();
+  }, [userInput, resizeTextarea]);
   
   const handleEndConversation = async () => {
       if (!messages.some(m => m.role === MessageRole.User)) {
@@ -147,8 +171,14 @@ const ConversationPractice: React.FC<ConversationPracticeProps> = ({ exercise, o
     if (!text || !chat || isLoading) return;
 
     if (exercise.category === ExerciseCategory.Conversation) {
-        const endKeywords = ["i'm done", "give me feedback", "end chat", "that's all", "end conversation", "stop now"];
-        if (endKeywords.some(kw => text.toLowerCase().includes(kw))) {
+        const endKeywords = [
+            "i'm done", "give me feedback", "end chat", "that's all", "end conversation", "stop now", "am done"
+        ];
+        const lowerText = text.toLowerCase();
+        // Check for any end keyword or if the message ends with 'done' or contains ' done ' as a word
+        const isEnd = endKeywords.some(kw => lowerText.includes(kw)) ||
+            /\bdone\b/.test(lowerText);
+        if (isEnd) {
             setUserInput('');
             handleEndConversation();
             return;
@@ -212,7 +242,25 @@ const ConversationPractice: React.FC<ConversationPracticeProps> = ({ exercise, o
         <div style={{ flex: 1, textAlign: 'center' }}>
             <h2 style={{ fontSize: '1.125rem', fontWeight: 'bold', color: '#1f2937', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', padding: '0 0.5rem' }}>{exercise.title}</h2>
         </div>
-        <div style={{ width: '2.5rem' }}></div>
+        <div style={{ width: '2.5rem', display: 'flex', justifyContent: 'center' }}>
+          {isSpeaking && (
+            <button
+              onClick={stopSpeaking}
+              style={{
+                padding: '0.5rem',
+                color: '#ef4444',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                borderRadius: '50%',
+                transition: 'background-color 0.2s ease'
+              }}
+              aria-label="Stop AI speech"
+            >
+              <VolumeX size={20} />
+            </button>
+          )}
+        </div>
       </header>
       
       <ExerciseCard exercise={exercise} />
@@ -266,9 +314,10 @@ const ConversationPractice: React.FC<ConversationPracticeProps> = ({ exercise, o
               value={userInput}
               onChange={(e) => {
                 setUserInput(e.target.value);
-                // Auto-resize the textarea
-                e.target.style.height = 'auto';
-                e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+                // Auto-resize the textarea using the improved function
+                requestAnimationFrame(() => {
+                  resizeTextarea();
+                });
               }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {

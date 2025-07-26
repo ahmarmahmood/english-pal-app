@@ -18,14 +18,14 @@ const FeedbackCard: React.FC<FeedbackCardProps> = ({ feedback, onGoBack }) => {
 
     return (
         <div className="flex flex-col h-full p-4 bg-gray-50 animate-fade-in">
-            <h2 className="text-2xl font-bold text-center text-dark-text mb-4">Your Report Card</h2>
+            <h2 className="text-2xl font-bold text-center text-dark-text mb-4 feedback-report-title">Your Report Card</h2>
             
             <div className="flex justify-center items-center mb-6">
-                <div className={`relative w-32 h-32 rounded-full flex items-center justify-center bg-gray-100 shadow-inner`}>
+                <div className={`relative w-32 h-32 rounded-full flex items-center justify-center bg-gray-100 shadow-inner feedback-score-circle`}>
                     <span className={`text-4xl font-bold ${getScoreColor(feedback.score)}`}>
                         {feedback.score}
                     </span>
-                    <span className="absolute top-1/2 right-1/2 translate-x-[40px] -translate-y-[28px] text-lg font-semibold text-gray-500">/100</span>
+                    <span className="absolute top-1/2 right-1/2 translate-x-[40px] -translate-y-[28px] text-lg font-semibold text-gray-500 feedback-score-label">/100</span>
                 </div>
             </div>
 

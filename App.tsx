@@ -1,9 +1,8 @@
 
 import React, { useState } from 'react';
-import { BookOpen, Languages, MessageCircle, Volume2, VolumeX } from 'lucide-react';
+import { BookOpen, MessageCircle, Volume2, VolumeX } from 'lucide-react';
 import { AppTab } from './types';
 import ReadingView from './components/ReadingView';
-import TranslationView from './components/TranslationView';
 import ChatView from './components/ChatView';
 
 
@@ -13,7 +12,6 @@ const App: React.FC = () => {
 
   const navItems = [
     { id: AppTab.Reading, icon: BookOpen, label: 'Reading' },
-    { id: AppTab.Translate, icon: Languages, label: 'Translate' },
     { id: AppTab.Chat, icon: MessageCircle, label: 'Chat' },
   ];
 
@@ -21,8 +19,6 @@ const App: React.FC = () => {
     switch (activeTab) {
       case AppTab.Reading:
         return <ReadingView />;
-      case AppTab.Translate:
-        return <TranslationView isTtsEnabled={isTtsEnabled} />;
       case AppTab.Chat:
         return <ChatView isTtsEnabled={isTtsEnabled} />;
       default:

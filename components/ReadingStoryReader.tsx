@@ -1,6 +1,6 @@
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Mic, ArrowLeft, RefreshCw, Volume2, Lightbulb } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { ArrowLeft, Volume2, Mic, RefreshCw, VolumeX, Lightbulb } from 'lucide-react';
 import { Story } from '../types';
 
 interface ReadingStoryReaderProps {
@@ -320,6 +320,21 @@ const ReadingStoryReader: React.FC<ReadingStoryReaderProps> = ({ story, onBack }
           >
             <Volume2 size={22} />
           </button>
+          {isSpeaking && (
+            <button 
+              onClick={() => window.speechSynthesis.cancel()} 
+              style={{ 
+                padding: '0.5rem', 
+                color: '#ef4444', 
+                background: 'none', 
+                border: 'none', 
+                cursor: 'pointer' 
+              }} 
+              aria-label="Stop reading"
+            >
+              <VolumeX size={20} />
+            </button>
+          )}
           <button 
             onClick={reset} 
             style={{ 

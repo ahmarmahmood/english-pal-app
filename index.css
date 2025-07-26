@@ -280,6 +280,40 @@ body {
   }
 }
 
+@media (max-width: 480px) {
+  .card {
+    padding: 0.75rem;
+    margin-bottom: 0.75rem;
+    border-radius: 0.5rem;
+  }
+  .card-content {
+    gap: 0.5rem;
+  }
+  .card-title {
+    font-size: 1rem;
+  }
+  .card-description {
+    font-size: 0.85rem;
+    -webkit-line-clamp: 4;
+  }
+  .feedback-score-circle {
+    width: 80px !important;
+    height: 80px !important;
+  }
+  .feedback-score-circle span {
+    font-size: 2rem !important;
+  }
+  .feedback-score-label {
+    font-size: 1rem !important;
+    right: 0 !important;
+    top: 60% !important;
+    transform: translateY(-50%) !important;
+  }
+  .feedback-report-title {
+    font-size: 1.25rem !important;
+  }
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
