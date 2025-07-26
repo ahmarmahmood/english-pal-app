@@ -242,25 +242,6 @@ const ConversationPractice: React.FC<ConversationPracticeProps> = ({ exercise, o
         <div style={{ flex: 1, textAlign: 'center' }}>
             <h2 style={{ fontSize: '1.125rem', fontWeight: 'bold', color: '#1f2937', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', padding: '0 0.5rem' }}>{exercise.title}</h2>
         </div>
-        <div style={{ width: '2.5rem', display: 'flex', justifyContent: 'center' }}>
-          {isSpeaking && (
-            <button
-              onClick={stopSpeaking}
-              style={{
-                padding: '0.5rem',
-                color: '#ef4444',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                borderRadius: '50%',
-                transition: 'background-color 0.2s ease'
-              }}
-              aria-label="Stop AI speech"
-            >
-              <VolumeX size={20} />
-            </button>
-          )}
-        </div>
       </header>
       
       <ExerciseCard exercise={exercise} />
@@ -282,9 +263,35 @@ const ConversationPractice: React.FC<ConversationPracticeProps> = ({ exercise, o
               backgroundColor: msg.role === MessageRole.User ? '#4f46e5' : '#f3f4f6',
               color: msg.role === MessageRole.User ? 'white' : '#1f2937',
               borderBottomRightRadius: msg.role === MessageRole.User ? '0.25rem' : '1rem',
-              borderBottomLeftRadius: msg.role === MessageRole.User ? '1rem' : '0.25rem'
+              borderBottomLeftRadius: msg.role === MessageRole.User ? '1rem' : '0.25rem',
+              position: 'relative'
             }}>
               <p style={{ fontSize: '0.875rem', lineHeight: '1.6' }}>{msg.text}</p>
+              {msg.role === MessageRole.Assistant && isSpeaking && messages[messages.length - 1]?.id === msg.id && (
+                <button
+                  onClick={stopSpeaking}
+                  style={{
+                    position: 'absolute',
+                    top: '-0.5rem',
+                    right: '-0.5rem',
+                    padding: '0.25rem',
+                    color: '#ef4444',
+                    background: 'white',
+                    border: '2px solid #ef4444',
+                    borderRadius: '50%',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '24px',
+                    height: '24px',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                  }}
+                  aria-label="Stop AI speech"
+                >
+                  <VolumeX size={12} />
+                </button>
+              )}
             </div>
           </div>
         ))}
